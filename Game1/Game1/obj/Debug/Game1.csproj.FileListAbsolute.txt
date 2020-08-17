@@ -1,0 +1,6 @@
+C:\Users\sebsk\source\repos\Game1\Game1\bin\Debug\Game1.exe.config
+C:\Users\sebsk\source\repos\Game1\Game1\bin\Debug\Game1.exe
+C:\Users\sebsk\source\repos\Game1\Game1\bin\Debug\Game1.pdb
+C:\Users\sebsk\source\repos\Game1\Game1\obj\Debug\Game1.csprojAssemblyReference.cache
+C:\Users\sebsk\source\repos\Game1\Game1\obj\Debug\Game1.exe
+C:\Users\sebsk\source\repos\Game1\Game1\obj\Debug\Game1.pdb
