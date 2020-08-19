@@ -10,6 +10,7 @@ namespace Game1
     {
         public int id;
         public DateTime lastUpdate;
+        public DateTime lastFire;
         public (int row, int col) position;
         public Vector direction;
         public Sprite sprite;
@@ -17,14 +18,17 @@ namespace Game1
         public int health;
         public int cost;
         public int range;
+        public int fireRate = 0;
         public int damage = 1;
         public int spread = 1;
         public int trail = 0;
+        public int[] powerUpCounter;
 
         public Entity(int id)
         {
             this.id = id;
             lastUpdate = DateTime.Now;
+            lastFire = DateTime.Now;
 
             if (id == 0)
             {
@@ -38,55 +42,17 @@ namespace Game1
             }
             else if (id == 1)
             {
-                if (rng.Next() % 2 == 0)
+                (int row, int col) tempPosition = (0, 0);
+                (int row, int col) playerPosition = entities[0].position;
+
+                tempPosition = (rng.Next(0, grid.Length), rng.Next(0, grid[0].Length));
+
+                while(entities.Exists(x => x.position == tempPosition) || damageObjects.Exists(x => x.position == tempPosition) || powerUps.Exists(x => x.position == tempPosition) || (tempPosition.row < playerPosition.row + 30 && tempPosition.row > playerPosition.row - 30 && tempPosition.col < playerPosition.col + 30 && tempPosition.col > playerPosition.col - 30))
                 {
-                    if (rng.Next() % 2 == 0)
-                    {
-                        position = (0, rng.Next(0, grid[0].Length));
-                    }
-                    else
-                    {
-                        position = (grid.Length - 1, rng.Next(0, grid[0].Length));
-                    }
-                }
-                else
-                {
-                    if (rng.Next() % 2 == 0)
-                    {
-                        position = (rng.Next(0, grid.Length), 0);
-                    }
-                    else
-                    {
-                        position = (rng.Next(0, grid.Length), grid[0].Length - 1);
-                    }
+                    tempPosition = (rng.Next(0, grid.Length), rng.Next(0, grid[0].Length));
                 }
 
-                while(entities.Exists(x => x.position == position) || damageObjects.Exists(x => x.position == position) || powerUps.Exists(x => x.position == position))
-                {
-                    if (rng.Next() % 2 == 0)
-                    {
-                        if (rng.Next() % 2 == 0)
-                        {
-                            position = (0, rng.Next(0, grid[0].Length));
-                        }
-                        else
-                        {
-                            position = (grid.Length - 1, rng.Next(0, grid[0].Length));
-                        }
-                    }
-                    else
-                    {
-                        if (rng.Next() % 2 == 0)
-                        {
-                            position = (rng.Next(0, grid.Length), 0);
-                        }
-                        else
-                        {
-                            position = (rng.Next(0, grid.Length), grid[0].Length - 1);
-                        }
-                    }
-                }
-
+                position = (tempPosition.row, tempPosition.col);
                 direction = new Vector(rng.Next(-1, 2), rng.Next(-1, 2), 1);
                 sprite = new Sprite("  ", 4, 0);
                 alignment = 1;
@@ -94,60 +60,60 @@ namespace Game1
                 cost = 1;
                 range = 0;
             }
+
+            powerUpCounter = new int[5];
         }
 
-        public void SetDirection(int d)
+        public void SetDirection(int dir)
         {
-            switch (d)
+            switch (dir)
             {
                 case -1:
-                    if (Math.Abs(entities[0].position.row - position.row) > Math.Abs(entities[0].position.col - position.col))
+                    Entity player = entities[0];
+                    bool tracking = true;
+
+                    int r = 0;
+                    int c = 0;
+                    int d = 1;
+
+                    if (position.row < player.position.row - 20 || position.row > player.position.row + 20 || position.col < player.position.col - 20 || position.col > player.position.col + 20)
                     {
-                        if (entities[0].position.row > position.row)
+                        if (rng.Next() % 100 > 7)
                         {
-                            direction = new Vector(1, 0, 1);
-                        }
-                        else
-                        {
-                            direction = new Vector(-1, 0, 1);
+                            tracking = false;
                         }
                     }
-                    else if (Math.Abs(entities[0].position.row - position.row) < Math.Abs(entities[0].position.col - position.col))
+
+                    if (tracking)
                     {
-                        if (entities[0].position.col > position.col)
-                        {
-                            direction = new Vector(0, 1, 1);
-                        }
-                        else
-                        {
-                            direction = new Vector(0, -1, 1);
-                        }
+                        if (position.row < player.position.row) { r = 1; }
+                        if (position.row > player.position.row) { r = -1; }
+
+                        if (position.col < player.position.col) { c = 1; }
+                        if (position.col > player.position.col) { c = -1; }
                     }
                     else
                     {
-                        int r = 0;
-                        int c = 0;
-
-                        if (entities[0].position.row > position.row)
-                        {
-                            r = 1;
-                        }
-                        else
-                        {
-                            r = -1;
-                        }
-
-                        if (entities[0].position.col > position.col)
-                        {
-                            c = 1;
-                        }
-                        else
-                        {
-                            c = -1;
-                        }
-
-                        direction = new Vector(r, c, 1);
+                        r = (rng.Next() % 3) - 1;
+                        c = (rng.Next() % 3) - 1;
+                        d = rng.Next() % 2;
                     }
+
+                    int checks = 0;
+
+                    while (entities.Exists(x => entities.IndexOf(x) != 0 && x.position == (position.row + r, position.col + c)) && checks < 4)
+                    {
+                        checks += 1;
+                        r = (rng.Next() % 3) - 1;
+                        c = (rng.Next() % 3) - 1;
+                    }
+
+                    if (checks == 5)
+                    {
+                        d = 0;
+                    }
+
+                    direction = new Vector(r, c, d);
                     break;
                 case 0:
                     direction = new Vector(-1, 0, 1);
@@ -161,6 +127,19 @@ namespace Game1
                 case 3:
                     direction = new Vector(0, -1, 1);
                     break;
+            }
+        }
+
+        public void Fire()
+        {
+            if (DateTime.Now >= lastFire.AddSeconds(0.5 - (fireRate / ((2 * fireRate) + 10))))
+            {
+                lastFire = DateTime.Now;
+
+                for (int s = 1; s <= spread; s++)
+                {
+                    damageObjects.Add(new DamageObject(10, this, s));
+                }
             }
         }
     }

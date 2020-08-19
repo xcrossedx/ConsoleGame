@@ -21,7 +21,6 @@ namespace Game1
         {
             this.id = id;
             lastUpdate = DateTime.Now;
-            position = (src.position.row + src.direction.r, src.position.col + src.direction.c);
 
             if (id == 10)
             {
@@ -116,11 +115,14 @@ namespace Game1
                     sprite = new Sprite("* ", 0, 12);
                 }
 
+                position = (src.position.row + direction.r, src.position.col + direction.c);
                 lifeSpan = src.range;
             }
             else if (id == 11)
             {
+                position = (src.position.row, src.position.col);
                 direction = new Vector(0, 0, 0);
+                sprite = new Sprite("/\\", 0, 8);
                 lifeSpan = src.trail;
             }
 

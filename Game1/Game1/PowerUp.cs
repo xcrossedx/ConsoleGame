@@ -51,8 +51,8 @@ namespace Game1
             }
             else if (id == 23)
             {
-                defaultSprite = new Sprite("[]", 0, 2);
-                flashSprite = new Sprite("[]", 0, 15);
+                defaultSprite = new Sprite("||", 0, 2);
+                flashSprite = new Sprite("||", 0, 15);
                 strength = 1;
                 cost = 3;
             }
@@ -64,7 +64,7 @@ namespace Game1
                 cost = 5;
             }
 
-            lifeSpan = 100;
+            lifeSpan = 1000;
         }
     }
 }

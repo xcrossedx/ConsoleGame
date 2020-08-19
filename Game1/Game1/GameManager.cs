@@ -16,28 +16,38 @@ namespace Game1
         public static DateTime gameTick;
         public static int gameTime;
 
+        public static int score;
+
         public static int enemyBank;
         public static int powerUpBank;
+
+        public static int enemyTotal;
+        public static int powerUpTotal;
 
         private static void Init()
         {
             ClearGrid();
             ObjectManager.Init();
-            enemyBank = 10;
+            enemyBank = 5;
             powerUpBank = 5;
+            enemyTotal = 0;
+            powerUpTotal = 0;
             gameTick = DateTime.Now;
             gameTime = 0;
+            score = 0;
         }
 
         private static void ClearGrid()
         {
-            grid = new int[Console.WindowHeight][];
+            ScreenManager.Reset();
 
-            int columns = (Console.WindowWidth) / 2;
+            grid = new int[Console.WindowHeight - 2][];
 
-            if (Console.WindowWidth % 2 == 0)
+            int columns = (Console.WindowWidth - 2) / 2;
+
+            if (Console.WindowWidth - 2 % 2 != 0)
             {
-                columns = (Console.WindowWidth - 1) / 2;
+                columns = (Console.WindowWidth - 3) / 2;
             }
 
             for (int r = 0; r < grid.Length; r++)
@@ -60,7 +70,10 @@ namespace Game1
                         int difficulty = 1 + (gameTime / 60);
 
                         enemyBank += difficulty;
-                        powerUpBank += difficulty;
+
+                        //WHERE I LEFT OFF!
+                        //I was trying to change the enemy spawn rate and difficulty curve,
+                        //possibly working in a limit on enemies and maybe power ups a well.
 
                         if (rng.Next(0, 10 + (5 * difficulty)) <= enemyBank)
                         {
@@ -117,36 +130,57 @@ namespace Game1
                     {
                         if (damageObject.lifeSpan > 0)
                         {
-                            if (DateTime.Now >= damageObject.lastUpdate.AddSeconds(0.1 / damageObject.direction.v))
+                            if (damageObject.direction.v > 0)
                             {
-                                ScreenManager.changes.Add((damageObject.position.row, damageObject.position.col, new Sprite("  ", 0, 0)));
-                                damageObject.position = (damageObject.position.row + damageObject.direction.r, damageObject.position.col + damageObject.direction.c);
-
-                                if (!ObjectManager.entities.Exists(x => x.alignment != damageObject.alignment && x.position == damageObject.position))
+                                if (DateTime.Now >= damageObject.lastUpdate.AddSeconds(0.1 / damageObject.direction.v))
                                 {
-                                    try
+                                    ScreenManager.changes.Add((damageObject.position.row, damageObject.position.col, new Sprite("  ", 0, 0)));
+                                    damageObject.position = (damageObject.position.row + damageObject.direction.r, damageObject.position.col + damageObject.direction.c);
+
+                                    if (!ObjectManager.entities.Exists(x => x.alignment != damageObject.alignment && x.position == damageObject.position))
                                     {
-                                        grid[damageObject.position.row][damageObject.position.col] = damageObject.id;
-
-                                        if (ScreenManager.changes.Exists(x => x.row == damageObject.position.row && x.col == damageObject.position.col))
+                                        if (damageObject.position.row >= 0 && damageObject.position.row < grid.Length && damageObject.position.col >= 0 && damageObject.position.col < grid[0].Length)
                                         {
-                                            ScreenManager.changes.RemoveAt(ScreenManager.changes.IndexOf(ScreenManager.changes.Find(x => x.row == damageObject.position.row && x.col == damageObject.position.col)));
-                                        }
+                                            grid[damageObject.position.row][damageObject.position.col] = damageObject.id;
 
+                                            if (ScreenManager.changes.Exists(x => x.row == damageObject.position.row && x.col == damageObject.position.col))
+                                            {
+                                                ScreenManager.changes.RemoveAt(ScreenManager.changes.IndexOf(ScreenManager.changes.Find(x => x.row == damageObject.position.row && x.col == damageObject.position.col)));
+                                            }
+
+                                            ScreenManager.changes.Add((damageObject.position.row, damageObject.position.col, damageObject.sprite));
+                                            damageObject.lifeSpan -= 1;
+                                        }
+                                        else
+                                        {
+                                            damageObject.lifeSpan = 0;
+                                        }
+                                        
+                                        damageObject.lastUpdate = DateTime.Now;
+                                    }
+                                    else
+                                    {
+                                        ObjectManager.entities[ObjectManager.entities.IndexOf(ObjectManager.entities.Find(x => x.alignment != damageObject.alignment && x.position == damageObject.position))].health -= 1;
+                                        damageObject.lifeSpan = 0;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (DateTime.Now >= damageObject.lastUpdate.AddSeconds(0.1))
+                                {
+                                    damageObject.lastUpdate = DateTime.Now;
+
+                                    if (!ObjectManager.entities.Exists(x => x.alignment != damageObject.alignment && x.position == damageObject.position))
+                                    {
                                         ScreenManager.changes.Add((damageObject.position.row, damageObject.position.col, damageObject.sprite));
                                         damageObject.lifeSpan -= 1;
                                     }
-                                    catch
+                                    else
                                     {
+                                        ObjectManager.entities[ObjectManager.entities.IndexOf(ObjectManager.entities.Find(x => x.alignment != damageObject.alignment && x.position == damageObject.position))].health -= 1;
                                         damageObject.lifeSpan = 0;
                                     }
-
-                                    damageObject.lastUpdate = DateTime.Now;
-                                }
-                                else
-                                {
-                                    ObjectManager.entities[ObjectManager.entities.IndexOf(ObjectManager.entities.Find(x => x.alignment != damageObject.alignment && x.position == damageObject.position))].health -= 1;
-                                    damageObject.lifeSpan = 0;
                                 }
                             }
 
@@ -169,13 +203,13 @@ namespace Game1
                         {
                             entity.SetDirection(-1);
 
-                            if (DateTime.Now >= entity.lastUpdate.AddSeconds(0.2))
+                            if (DateTime.Now >= entity.lastUpdate.AddSeconds(0.25))
                             {
                                 (int row, int col) tempPosition = (entity.position.row + entity.direction.r, entity.position.col + entity.direction.c);
 
                                 if (entity.position != ObjectManager.entities[0].position)
                                 {
-                                    try
+                                    if (tempPosition.row >= 0 && tempPosition.row < grid.Length && tempPosition.col >= 0 && tempPosition.col < grid[0].Length)
                                     {
                                         grid[tempPosition.row][tempPosition.col] = entity.id;
 
@@ -190,7 +224,6 @@ namespace Game1
 
                                         entity.position = (tempPosition.row, tempPosition.col);
                                     }
-                                    catch { }
 
                                     entity.lastUpdate = DateTime.Now;
                                 }
@@ -206,6 +239,8 @@ namespace Game1
                         else
                         {
                             ScreenManager.changes.Add((entity.position.row, entity.position.col, new Sprite("  ", 0, 0)));
+                            powerUpBank += 1;
+                            score += 100;
                         }
                     }
 
@@ -219,11 +254,23 @@ namespace Game1
 
                             if (tempPosition != player.position)
                             {
-                                try
+                                if (tempPosition.row >= 0 && tempPosition.row < grid.Length && tempPosition.col >= 0 && tempPosition.col < grid[0].Length)
                                 {
                                     grid[tempPosition.row][tempPosition.col] = player.id;
 
-                                    ScreenManager.changes.Add((player.position.row, player.position.col, new Sprite("  ", 0, 0)));
+                                    if (player.direction.v > 0)
+                                    {
+                                        if (player.trail == 0)
+                                        {
+                                            ScreenManager.changes.Add((player.position.row, player.position.col, new Sprite("  ", 0, 0)));
+                                        }
+                                        else
+                                        {
+                                            DamageObject spike = new DamageObject(11, player, 1);
+                                            ObjectManager.damageObjects.Add(spike);
+                                            ScreenManager.changes.Add((spike.position.row, spike.position.col, spike.sprite));
+                                        }
+                                    }
 
                                     if (ScreenManager.changes.Exists(x => x.row == tempPosition.row && x.col == tempPosition.col))
                                     {
@@ -233,8 +280,45 @@ namespace Game1
                                     ScreenManager.changes.Add((tempPosition.row, tempPosition.col, player.sprite));
 
                                     player.position = (tempPosition.row, tempPosition.col);
+
+                                    if (ObjectManager.powerUps.Exists(x => x.position.row == player.position.row && x.position.col == player.position.col))
+                                    {
+                                        PowerUp powerUp = ObjectManager.powerUps[ObjectManager.powerUps.IndexOf(ObjectManager.powerUps.Find(x => x.position.row == player.position.row && x.position.col == player.position.col))];
+
+                                        if (powerUp.id == 20)
+                                        {
+                                            player.health += powerUp.strength;
+                                            player.powerUpCounter[0] += 1;
+                                            score += 10;
+                                        }
+                                        else if (powerUp.id == 21)
+                                        {
+                                            player.range += powerUp.strength;
+                                            player.powerUpCounter[1] += 1;
+                                            score += 10;
+                                        }
+                                        else if (powerUp.id == 22)
+                                        {
+                                            player.trail += powerUp.strength;
+                                            player.powerUpCounter[2] += 1;
+                                            score += 20;
+                                        }
+                                        else if (powerUp.id == 23)
+                                        {
+                                            player.fireRate += powerUp.strength;
+                                            player.powerUpCounter[3] += 1;
+                                            score += 20;
+                                        }
+                                        else if (powerUp.id == 24)
+                                        {
+                                            player.spread += powerUp.strength;
+                                            player.powerUpCounter[4] += 1;
+                                            score += 30;
+                                        }
+
+                                        ObjectManager.powerUps.RemoveAt(ObjectManager.powerUps.IndexOf(powerUp));
+                                    }
                                 }
-                                catch { }
 
                                 player.direction.v = 0;
                             }
@@ -269,10 +353,7 @@ namespace Game1
 
                 if (input == ConsoleKey.Spacebar && !(ObjectManager.entities[0].direction.r == 0 && ObjectManager.entities[0].direction.c == 0))
                 {
-                    for (int s = 0; s < ObjectManager.entities[0].spread; s++)
-                    {
-                        ObjectManager.damageObjects.Add(new DamageObject(10, ObjectManager.entities[0], 1 + s));
-                    }
+                    ObjectManager.entities[0].Fire();
                 }
                 else if (input == ConsoleKey.UpArrow || input == ConsoleKey.W)
                 {
@@ -289,6 +370,10 @@ namespace Game1
                 else if (input == ConsoleKey.LeftArrow || input == ConsoleKey.A)
                 {
                     ObjectManager.entities[0].SetDirection(3);
+                }
+                else if (input == ConsoleKey.Escape)
+                {
+                    gameState = -1;
                 }
             }
         }
