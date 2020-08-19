@@ -15,11 +15,12 @@ namespace Game1
 
         public static DateTime gameTick;
         public static int gameTime;
+        public static int difficulty;
 
         public static int score;
 
-        public static int enemyBank;
-        public static int powerUpBank;
+        public static float enemyBank;
+        public static float powerUpBank;
 
         public static int enemyTotal;
         public static int powerUpTotal;
@@ -34,6 +35,7 @@ namespace Game1
             powerUpTotal = 0;
             gameTick = DateTime.Now;
             gameTime = 0;
+            difficulty = 1;
             score = 0;
         }
 
@@ -66,25 +68,21 @@ namespace Game1
                     {
                         gameTick = DateTime.Now;
                         gameTime += 1;
+                        difficulty = 1 + (gameTime / 60);
 
-                        int difficulty = 1 + (gameTime / 60);
+                        float income = 3.0f - (3.0f / (1 + (float)Math.Exp((difficulty) - 3)));
+                        enemyBank += income;
 
-                        enemyBank += difficulty;
-
-                        //WHERE I LEFT OFF!
-                        //I was trying to change the enemy spawn rate and difficulty curve,
-                        //possibly working in a limit on enemies and maybe power ups a well.
-
-                        if (rng.Next(0, 10 + (5 * difficulty)) <= enemyBank)
+                        if (enemyTotal < 20 * difficulty && enemyBank >= 1)
                         {
-                            int budget = rng.Next(1, enemyBank + 1);
+                            int budget = rng.Next(1, (int)enemyBank + 1);
                             ObjectManager.BuyEnemies(budget);
                             enemyBank -= budget;
                         }
 
-                        if (rng.Next(0, 10 + (5 * difficulty)) <= powerUpBank)
+                        if (powerUpTotal < 10 * difficulty && powerUpBank >= 5)
                         {
-                            int budget = rng.Next(1, powerUpBank + 1);
+                            int budget = rng.Next(1, (int)powerUpBank + 1);
                             ObjectManager.BuyPowerUps(budget);
                             powerUpBank -= budget;
                         }
@@ -162,6 +160,8 @@ namespace Game1
                                     {
                                         ObjectManager.entities[ObjectManager.entities.IndexOf(ObjectManager.entities.Find(x => x.alignment != damageObject.alignment && x.position == damageObject.position))].health -= 1;
                                         damageObject.lifeSpan = 0;
+                                        powerUpBank += 1;
+                                        score += 100;
                                     }
                                 }
                             }
@@ -179,7 +179,9 @@ namespace Game1
                                     else
                                     {
                                         ObjectManager.entities[ObjectManager.entities.IndexOf(ObjectManager.entities.Find(x => x.alignment != damageObject.alignment && x.position == damageObject.position))].health -= 1;
-                                        damageObject.lifeSpan = 0;
+                                        damageObject.lifeSpan = 0; 
+                                        powerUpBank += 1;
+                                        score += 100;
                                     }
                                 }
                             }
@@ -239,8 +241,6 @@ namespace Game1
                         else
                         {
                             ScreenManager.changes.Add((entity.position.row, entity.position.col, new Sprite("  ", 0, 0)));
-                            powerUpBank += 1;
-                            score += 100;
                         }
                     }
 
