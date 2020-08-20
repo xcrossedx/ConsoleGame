@@ -9,6 +9,7 @@ namespace Game1
     class DamageObject : ObjectManager
     {
         public int id;
+        public bool fresh = true;
         public DateTime lastUpdate;
         public (int row, int col) position;
         public Vector direction;
@@ -16,13 +17,14 @@ namespace Game1
         public int lifeSpan;
         public int alignment;
         public int damage;
+        public int durability;
 
         public DamageObject(int id, Entity src, int spread)
         {
             this.id = id;
             lastUpdate = DateTime.Now;
 
-            if (id == 10)
+            if (id == 0)
             {
                 if (spread == 1)
                 {
@@ -94,7 +96,7 @@ namespace Game1
                         direction = new Vector(-src.direction.r, -1, 2);
                     }
                 }
-                else
+                else if (spread == 8)
                 {
                     if (src.direction.r == 0)
                     {
@@ -103,6 +105,94 @@ namespace Game1
                     else
                     {
                         direction = new Vector(-src.direction.r, 0, 2);
+                    }
+                }
+                else if (spread == 9)
+                {
+                    if (src.direction.r == 0)
+                    {
+                        direction = new Vector(src.direction.c, src.direction.c * 2, 1);
+                    }
+                    else
+                    {
+                        direction = new Vector(src.direction.r * 2, -src.direction.r, 1);
+                    }
+                }
+                else if (spread == 10)
+                {
+                    if (src.direction.r == 0)
+                    {
+                        direction = new Vector(-src.direction.c, src.direction.c * 2, 1);
+                    }
+                    else
+                    {
+                        direction = new Vector(src.direction.r * 2, src.direction.r, 1);
+                    }
+                }
+                else if (spread == 11)
+                {
+                    if (src.direction.r == 0)
+                    {
+                        direction = new Vector(src.direction.c * 2, src.direction.c, 1);
+                    }
+                    else
+                    {
+                        direction = new Vector(src.direction.r, -src.direction.r * 2, 1);
+                    }
+                }
+                else if (spread == 12)
+                {
+                    if (src.direction.r == 0)
+                    {
+                        direction = new Vector(-src.direction.c * 2, src.direction.c, 1);
+                    }
+                    else
+                    {
+                        direction = new Vector(src.direction.r, src.direction.r * 2, 1);
+                    }
+                }
+                else if (spread == 13)
+                {
+                    if (src.direction.r == 0)
+                    {
+                        direction = new Vector(src.direction.c * 2, -src.direction.c, 1);
+                    }
+                    else
+                    {
+                        direction = new Vector(-src.direction.r, -src.direction.r * 2, 1);
+                    }
+                }
+                else if (spread == 14)
+                {
+                    if (src.direction.r == 0)
+                    {
+                        direction = new Vector(-src.direction.c * 2, -src.direction.c, 1);
+                    }
+                    else
+                    {
+                        direction = new Vector(-src.direction.r, src.direction.r * 2, 1);
+                    }
+                }
+                else if (spread == 15)
+                {
+                    if (src.direction.r == 0)
+                    {
+                        direction = new Vector(src.direction.c, -src.direction.c * 2, 1);
+                    }
+                    else
+                    {
+                        direction = new Vector(-src.direction.r * 2, -src.direction.r, 1);
+                    }
+                }
+                else if (spread == 16)
+                {
+                    if (src.direction.r == 0)
+                    {
+                        direction = new Vector(-src.direction.c, -src.direction.c * 2, 1);
+                    }
+                    else
+                    {
+                        direction = new Vector(-src.direction.r * 2, src.direction.r, 1);
                     }
                 }
 
@@ -118,7 +208,7 @@ namespace Game1
                 position = (src.position.row + direction.r, src.position.col + direction.c);
                 lifeSpan = src.range;
             }
-            else if (id == 11)
+            else if (id == 1)
             {
                 position = (src.position.row, src.position.col);
                 direction = new Vector(0, 0, 0);
@@ -128,6 +218,7 @@ namespace Game1
 
             alignment = src.alignment;
             damage = src.damage;
+            durability = src.piercing;
         }
     }
 }

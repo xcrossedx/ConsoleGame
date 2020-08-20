@@ -21,6 +21,7 @@ namespace Game1
         public int fireRate = 0;
         public int damage = 1;
         public int spread = 1;
+        public int piercing = 1;
         public int trail = 0;
         public int[] powerUpCounter;
 
@@ -61,7 +62,7 @@ namespace Game1
                 range = 0;
             }
 
-            powerUpCounter = new int[5];
+            powerUpCounter = new int[6];
         }
 
         public void SetDirection(int dir)
@@ -132,13 +133,13 @@ namespace Game1
 
         public void Fire()
         {
-            if (DateTime.Now >= lastFire.AddSeconds(0.5 - (fireRate / ((2 * fireRate) + 10))))
+            if (DateTime.Now >= lastFire.AddSeconds(0.5 - (0.05 * fireRate)))
             {
                 lastFire = DateTime.Now;
 
                 for (int s = 1; s <= spread; s++)
                 {
-                    damageObjects.Add(new DamageObject(10, this, s));
+                    damageObjects.Add(new DamageObject(0, this, s));
                 }
             }
         }

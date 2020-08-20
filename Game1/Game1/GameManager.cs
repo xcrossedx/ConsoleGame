@@ -70,310 +70,92 @@ namespace Game1
                         gameTime += 1;
                         difficulty = 1 + (gameTime / 60);
 
-                        float income = 3.0f - (3.0f / (1 + (float)Math.Exp((difficulty) - 3)));
+                        float income = 5.0f - (5.0f / (1 + (float)Math.Exp((difficulty / 3) - 3)));
                         enemyBank += income;
 
-                        if (enemyTotal < 20 * difficulty && enemyBank >= 1)
+                        if (enemyTotal < 101 - (100 / (1 + (float)Math.Exp((difficulty / 10) - 2))) && enemyBank >= 1)
                         {
-                            int budget = rng.Next(1, (int)enemyBank + 1);
+                            int max = (int)enemyBank + 1;
+                            if (max > 6) { max = 6; }
+                            int budget = rng.Next(1, max);
                             ObjectManager.BuyEnemies(budget);
                             enemyBank -= budget;
                         }
 
-                        if (powerUpTotal < 10 * difficulty && powerUpBank >= 5)
+                        if (powerUpTotal < 11 - (6 / 1 + (float)Math.Exp((difficulty / 4) - 3)) && powerUpBank >= 5)
                         {
-                            int budget = rng.Next(1, (int)powerUpBank + 1);
+                            int max = (int)powerUpBank + 1;
+                            if (max > 11) { max = 11; }
+                            int budget = rng.Next(1, max);
                             ObjectManager.BuyPowerUps(budget);
                             powerUpBank -= budget;
                         }
                     }
 
-                    List<PowerUp> tempPowerUpList = new List<PowerUp>();
-                    List<DamageObject> tempDamageObjectList = new List<DamageObject>();
-                    List<Entity> tempEntityList = new List<Entity>();
-
-                    foreach (PowerUp powerUp in ObjectManager.powerUps)
-                    {
-                        if (powerUp.lifeSpan > 0)
-                        {
-                            if (DateTime.Now >= powerUp.lastUpdate.AddSeconds(.1))
-                            {
-                                grid[powerUp.position.row][powerUp.position.col] = powerUp.id;
-
-                                if (powerUp.lifeSpan > 5 || powerUp.lifeSpan % 2 == 0)
-                                {
-                                    ScreenManager.changes.Add((powerUp.position.row, powerUp.position.col, powerUp.defaultSprite));
-                                }
-                                else
-                                {
-                                    ScreenManager.changes.Add((powerUp.position.row, powerUp.position.col, powerUp.flashSprite));
-                                }
-
-                                powerUp.lifeSpan -= 1;
-                                powerUp.lastUpdate = DateTime.Now;
-                            }
-
-                            tempPowerUpList.Add((PowerUp)powerUp.MemberwiseClone());
-                        }
-                        else
-                        {
-                            ScreenManager.changes.Add((powerUp.position.row, powerUp.position.col, new Sprite("  ", 0, 0)));
-                        }
-                    }
-
-                    ObjectManager.powerUps.Clear();
-                    ObjectManager.powerUps.AddRange(tempPowerUpList);
-
-                    foreach (DamageObject damageObject in ObjectManager.damageObjects)
-                    {
-                        if (damageObject.lifeSpan > 0)
-                        {
-                            if (damageObject.direction.v > 0)
-                            {
-                                if (DateTime.Now >= damageObject.lastUpdate.AddSeconds(0.1 / damageObject.direction.v))
-                                {
-                                    ScreenManager.changes.Add((damageObject.position.row, damageObject.position.col, new Sprite("  ", 0, 0)));
-                                    damageObject.position = (damageObject.position.row + damageObject.direction.r, damageObject.position.col + damageObject.direction.c);
-
-                                    if (!ObjectManager.entities.Exists(x => x.alignment != damageObject.alignment && x.position == damageObject.position))
-                                    {
-                                        if (damageObject.position.row >= 0 && damageObject.position.row < grid.Length && damageObject.position.col >= 0 && damageObject.position.col < grid[0].Length)
-                                        {
-                                            grid[damageObject.position.row][damageObject.position.col] = damageObject.id;
-
-                                            if (ScreenManager.changes.Exists(x => x.row == damageObject.position.row && x.col == damageObject.position.col))
-                                            {
-                                                ScreenManager.changes.RemoveAt(ScreenManager.changes.IndexOf(ScreenManager.changes.Find(x => x.row == damageObject.position.row && x.col == damageObject.position.col)));
-                                            }
-
-                                            ScreenManager.changes.Add((damageObject.position.row, damageObject.position.col, damageObject.sprite));
-                                            damageObject.lifeSpan -= 1;
-                                        }
-                                        else
-                                        {
-                                            damageObject.lifeSpan = 0;
-                                        }
-                                        
-                                        damageObject.lastUpdate = DateTime.Now;
-                                    }
-                                    else
-                                    {
-                                        ObjectManager.entities[ObjectManager.entities.IndexOf(ObjectManager.entities.Find(x => x.alignment != damageObject.alignment && x.position == damageObject.position))].health -= 1;
-                                        damageObject.lifeSpan = 0;
-                                        powerUpBank += 1;
-                                        score += 100;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if (DateTime.Now >= damageObject.lastUpdate.AddSeconds(0.1))
-                                {
-                                    damageObject.lastUpdate = DateTime.Now;
-
-                                    if (!ObjectManager.entities.Exists(x => x.alignment != damageObject.alignment && x.position == damageObject.position))
-                                    {
-                                        ScreenManager.changes.Add((damageObject.position.row, damageObject.position.col, damageObject.sprite));
-                                        damageObject.lifeSpan -= 1;
-                                    }
-                                    else
-                                    {
-                                        ObjectManager.entities[ObjectManager.entities.IndexOf(ObjectManager.entities.Find(x => x.alignment != damageObject.alignment && x.position == damageObject.position))].health -= 1;
-                                        damageObject.lifeSpan = 0; 
-                                        powerUpBank += 1;
-                                        score += 100;
-                                    }
-                                }
-                            }
-
-                            tempDamageObjectList.Add((DamageObject)damageObject.MemberwiseClone());
-                        }
-                        else if (damageObject.position.row >= 0 && damageObject.position.row < grid.Length && damageObject.position.col >= 0 && damageObject.position.col < grid[0].Length)
-                        {
-                            ScreenManager.changes.Add((damageObject.position.row, damageObject.position.col, new Sprite("  ", 0, 0)));
-                        }
-                    }
-
-                    ObjectManager.damageObjects.Clear();
-                    ObjectManager.damageObjects.AddRange(tempDamageObjectList);
-
-                    for (int e = 1; e < ObjectManager.entities.Count(); e++)
-                    {
-                        Entity entity = ObjectManager.entities[e];
-
-                        if (entity.health > 0)
-                        {
-                            entity.SetDirection(-1);
-
-                            if (DateTime.Now >= entity.lastUpdate.AddSeconds(0.25))
-                            {
-                                (int row, int col) tempPosition = (entity.position.row + entity.direction.r, entity.position.col + entity.direction.c);
-
-                                if (entity.position != ObjectManager.entities[0].position)
-                                {
-                                    if (tempPosition.row >= 0 && tempPosition.row < grid.Length && tempPosition.col >= 0 && tempPosition.col < grid[0].Length)
-                                    {
-                                        grid[tempPosition.row][tempPosition.col] = entity.id;
-
-                                        ScreenManager.changes.Add((entity.position.row, entity.position.col, new Sprite("  ", 0, 0)));
-
-                                        if (ScreenManager.changes.Exists(x => x.row == tempPosition.row && x.col == tempPosition.col))
-                                        {
-                                            ScreenManager.changes.RemoveAt(ScreenManager.changes.IndexOf(ScreenManager.changes.Find(x => x.row == tempPosition.row && x.col == tempPosition.col)));
-                                        }
-
-                                        ScreenManager.changes.Add((tempPosition.row, tempPosition.col, entity.sprite));
-
-                                        entity.position = (tempPosition.row, tempPosition.col);
-                                    }
-
-                                    entity.lastUpdate = DateTime.Now;
-                                }
-                                else
-                                {
-                                    entity.health = 0;
-                                    ObjectManager.entities[0].health -= 1;
-                                }
-                            }
-
-                            tempEntityList.Add((Entity)entity.MemberwiseClone());
-                        }
-                        else
-                        {
-                            ScreenManager.changes.Add((entity.position.row, entity.position.col, new Sprite("  ", 0, 0)));
-                        }
-                    }
-
-                    Entity player = (Entity)ObjectManager.entities[0].MemberwiseClone();
-
-                    if (player.health > 0)
-                    {
-                        if (DateTime.Now >= player.lastUpdate.AddSeconds(0.1))
-                        {
-                            (int row, int col) tempPosition = (player.position.row + (player.direction.r * player.direction.v), player.position.col + (player.direction.c * player.direction.v));
-
-                            if (tempPosition != player.position)
-                            {
-                                if (tempPosition.row >= 0 && tempPosition.row < grid.Length && tempPosition.col >= 0 && tempPosition.col < grid[0].Length)
-                                {
-                                    grid[tempPosition.row][tempPosition.col] = player.id;
-
-                                    if (player.direction.v > 0)
-                                    {
-                                        if (player.trail == 0)
-                                        {
-                                            ScreenManager.changes.Add((player.position.row, player.position.col, new Sprite("  ", 0, 0)));
-                                        }
-                                        else
-                                        {
-                                            DamageObject spike = new DamageObject(11, player, 1);
-                                            ObjectManager.damageObjects.Add(spike);
-                                            ScreenManager.changes.Add((spike.position.row, spike.position.col, spike.sprite));
-                                        }
-                                    }
-
-                                    if (ScreenManager.changes.Exists(x => x.row == tempPosition.row && x.col == tempPosition.col))
-                                    {
-                                        ScreenManager.changes.RemoveAt(ScreenManager.changes.IndexOf(ScreenManager.changes.Find(x => x.row == tempPosition.row && x.col == tempPosition.col)));
-                                    }
-
-                                    ScreenManager.changes.Add((tempPosition.row, tempPosition.col, player.sprite));
-
-                                    player.position = (tempPosition.row, tempPosition.col);
-
-                                    if (ObjectManager.powerUps.Exists(x => x.position.row == player.position.row && x.position.col == player.position.col))
-                                    {
-                                        PowerUp powerUp = ObjectManager.powerUps[ObjectManager.powerUps.IndexOf(ObjectManager.powerUps.Find(x => x.position.row == player.position.row && x.position.col == player.position.col))];
-
-                                        if (powerUp.id == 20)
-                                        {
-                                            player.health += powerUp.strength;
-                                            player.powerUpCounter[0] += 1;
-                                            score += 10;
-                                        }
-                                        else if (powerUp.id == 21)
-                                        {
-                                            player.range += powerUp.strength;
-                                            player.powerUpCounter[1] += 1;
-                                            score += 10;
-                                        }
-                                        else if (powerUp.id == 22)
-                                        {
-                                            player.trail += powerUp.strength;
-                                            player.powerUpCounter[2] += 1;
-                                            score += 20;
-                                        }
-                                        else if (powerUp.id == 23)
-                                        {
-                                            player.fireRate += powerUp.strength;
-                                            player.powerUpCounter[3] += 1;
-                                            score += 20;
-                                        }
-                                        else if (powerUp.id == 24)
-                                        {
-                                            player.spread += powerUp.strength;
-                                            player.powerUpCounter[4] += 1;
-                                            score += 30;
-                                        }
-
-                                        ObjectManager.powerUps.RemoveAt(ObjectManager.powerUps.IndexOf(powerUp));
-                                    }
-                                }
-
-                                player.direction.v = 0;
-                            }
-                            else
-                            {
-                                ScreenManager.changes.Add((player.position.row, player.position.col, player.sprite));
-                            }
-
-                            player.lastUpdate = DateTime.Now;
-                        }
-                    }
-                    else
-                    {
-                        gameState = 0;
-                    }
-
-                    ObjectManager.entities.Clear();
-                    ObjectManager.entities.Add((Entity)player.MemberwiseClone());
-                    ObjectManager.entities.AddRange(tempEntityList);
-
+                    ObjectManager.UpdateObjects();
                     ScreenManager.ScreenUpdate();
                 }
 
                 ConsoleKey input = Console.ReadKey(true).Key;
 
-                if (gameState == 0)
+                if (gameState == 0 && input != ConsoleKey.Escape)
                 {
                     ScreenManager.ClearScreen();
                     Init();
                     gameState = 1;
                 }
 
-                if (input == ConsoleKey.Spacebar && !(ObjectManager.entities[0].direction.r == 0 && ObjectManager.entities[0].direction.c == 0))
+                if (gameState == 1 && input == ConsoleKey.Spacebar && !(ObjectManager.entities[0].direction.r == 0 && ObjectManager.entities[0].direction.c == 0))
                 {
                     ObjectManager.entities[0].Fire();
                 }
-                else if (input == ConsoleKey.UpArrow || input == ConsoleKey.W)
+                else if (gameState == 1 && input == ConsoleKey.UpArrow || input == ConsoleKey.W)
                 {
                     ObjectManager.entities[0].SetDirection(0);
                 }
-                else if (input == ConsoleKey.RightArrow || input == ConsoleKey.D)
+                else if (gameState == 1 && input == ConsoleKey.RightArrow || input == ConsoleKey.D)
                 {
                     ObjectManager.entities[0].SetDirection(1);
                 }
-                else if (input == ConsoleKey.DownArrow || input == ConsoleKey.S)
+                else if (gameState == 1 && input == ConsoleKey.DownArrow || input == ConsoleKey.S)
                 {
                     ObjectManager.entities[0].SetDirection(2);
                 }
-                else if (input == ConsoleKey.LeftArrow || input == ConsoleKey.A)
+                else if (gameState == 1 && input == ConsoleKey.LeftArrow || input == ConsoleKey.A)
                 {
                     ObjectManager.entities[0].SetDirection(3);
                 }
                 else if (input == ConsoleKey.Escape)
                 {
-                    gameState = -1;
+                    switch (gameState)
+                    {
+                        case 0:
+                            gameState = -1;
+                            break;
+                        case 1:
+                            gameState = 2;
+                            ScreenManager.GameMessage("Game paused!", 15);
+                            break;
+                        case 2:
+                            gameState = 0;
+                            ScreenManager.Clear();
+                            break;
+                        case 3:
+                            gameState = -1;
+                            break;
+                    }
+                }
+                else
+                {
+                    if (gameState == 3 && input == ConsoleKey.Enter)
+                    {
+                        gameState = 0;
+                        ScreenManager.Clear();
+                    }
+                    else if (gameState != 3)
+                    {
+                        gameState = 1;
+                    }
                 }
             }
         }
